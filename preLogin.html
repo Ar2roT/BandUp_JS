@@ -1,0 +1,172 @@
+<?php
+// Initialize the session
+session_start();
+ 
+// Check if the user is already logged in, if yes then redirect him to welcome page
+if(isset($_SESSION["loggedin"]) && $_SESSION["loggedin"] === true){
+  header("location: welcome.php");
+  exit;
+}
+ 
+// Include config file
+require_once "config.php";
+ 
+// Define variables and initialize with empty values
+$username = $password = "";
+$username_err = $password_err = "";
+ 
+// Processing form data when form is submitted
+if($_SERVER["REQUEST_METHOD"] == "POST"){
+ 
+    // Check if username is empty
+    if(empty(trim($_POST["username"]))){
+        $username_err = "Por favor ingrese su usuario.";
+    } else{
+        $username = trim($_POST["username"]);
+    }
+    
+    // Check if password is empty
+    if(empty(trim($_POST["password"]))){
+        $password_err = "Por favor ingrese su contraseña.";
+    } else{
+        $password = trim($_POST["password"]);
+    }
+    
+    // Validate credentials
+    if(empty($username_err) && empty($password_err)){
+        // Prepare a select statement
+        $sql = "SELECT id, usuario, password FROM usuarios WHERE usuario = ?";
+        
+        if($stmt = mysqli_prepare($link, $sql)){
+            // Bind variables to the prepared statement as parameters
+            mysqli_stmt_bind_param($stmt, "s", $param_username);
+            
+            // Set parameters
+            $param_username = $username;
+            
+            // Attempt to execute the prepared statement
+            if(mysqli_stmt_execute($stmt)){
+                // Store result
+                mysqli_stmt_store_result($stmt);
+                
+                // Check if username exists, if yes then verify password
+                if(mysqli_stmt_num_rows($stmt) == 1){                    
+                    // Bind result variables
+                    mysqli_stmt_bind_result($stmt, $id, $username, $hashed_password);
+                    if(mysqli_stmt_fetch($stmt)){
+                        if(password_verify($password, $hashed_password)){
+                            // Password is correct, so start a new session
+                            session_start();
+                            
+                            // Store data in session variables
+                            $_SESSION["loggedin"] = true;
+                            $_SESSION["id"] = $id;
+                            $_SESSION["username"] = $username;                            
+                            
+                            // Redirect user to welcome page
+                            header("location: welcome.php");
+                        } else{
+                            // Display an error message if password is not valid
+                            $password_err = "La contraseña que has ingresado no es válida.";
+                        }
+                    }
+                } else{
+                    // Display an error message if username doesn't exist
+                    $username_err = "No existe cuenta registrada con ese nombre de usuario.";
+                }
+            } else{
+                echo "Algo salió mal, por favor vuelve a intentarlo.";
+            }
+        }
+        
+        // Close statement
+        mysqli_stmt_close($stmt);
+    }
+    
+    // Close connection
+    mysqli_close($link);
+}
+?>
+<!DOCTYPE html>
+<html lang='es'>
+    <head>
+        <style>
+            ::-webkit-scrollbar {
+                display: none;
+            }
+
+            html, body { 
+                height: 100%;
+                overflow: hidden
+            }
+        </style>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial scale=1.0">
+        <title>Iniciar Sesión | BandUp</title>
+
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&family=Montserrat:wght@700&display=swap"
+            rel="stylesheet">
+        <link href="css/normalize.css" rel="stylesheet">
+        <link href="css/styles.css" as="style" rel="preload">
+        <link href="css/styles.css" rel="stylesheet">
+        <script src="https://kit.fontawesome.com/c80fbc750b.js" crossorigin="anonymous"></script>
+    </head>
+
+    <body>
+        <div class="logo-alt">
+            <a href="https://bandup.monkeydevs.mx">
+                <img src="/bandup/img/BandUp.svg" width="100">
+            </a>
+            <nav class="nav-alt">
+                <ul class="menu-alt" style="padding-left: 20px;">
+                    <li><a href="https://bandup.monkeydevs.mx/">INICIO</a></li>
+                    <li><a href="/quienessomos.html">QUIÉNES SOMOS</a></li>
+                    <li><a href="#">CATÁLOGO</a></li>
+                    <li><a href="/contacto.html">CONTACTO</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="contenedor-registro cr-login">
+        <a class="titulos-body alt">Iniciar Sesión</a>
+        <br>
+        <form class="formulario" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
+                <div class="input-contenedorReg">
+                <svg class="iconReg" style="width:24px;height:24px" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M11,4A4,4 0 0,1 15,8A4,4 0 0,1 11,12A4,4 0 0,1 7,8A4,4 0 0,1 11,4M11,6A2,2 0 0,0 9,8A2,2 0 0,0 11,10A2,2 0 0,0 13,8A2,2 0 0,0 11,6M11,13C12.1,13 13.66,13.23 15.11,13.69C14.5,14.07 14,14.6 13.61,15.23C12.79,15.03 11.89,14.9 11,14.9C8.03,14.9 4.9,16.36 4.9,17V18.1H13.04C13.13,18.8 13.38,19.44 13.76,20H3V17C3,14.34 8.33,13 11,13M18.5,10H20L22,10V12H20V17.5A2.5,2.5 0 0,1 17.5,20A2.5,2.5 0 0,1 15,17.5A2.5,2.5 0 0,1 17.5,15C17.86,15 18.19,15.07 18.5,15.21V10Z" />
+</svg>
+                    <input class="sesion" name="username" type="text" placeholder="Nombre de usuario" pattern="[A-Za-z0-9]{6,15}" value="<?php echo $username; ?>"/>
+                    <span class="help-block"><?php echo $username_err; ?></span>
+                </div>
+                <br>
+                <div class="input-contenedorReg">
+                <svg class="iconReg" style="width:22px; height:22px" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12,17C10.89,17 10,16.1 10,15C10,13.89 10.89,13 12,13A2,2 0 0,1 14,15A2,2 0 0,1 12,17M18,20V10H6V20H18M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V10C4,8.89 4.89,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" />
+</svg>
+                    <input name="password" type="password" placeholder="Contraseña" minlength="8"/>
+                    <br>
+                    <span class="help-block"><?php echo $password_err; ?></span>
+                </div>
+                <br><br>
+                    <div class="center">
+                    <button type="submit" class="registro" name="enviar">Ingresar</button>
+                </div>
+                <div class="center">
+                <p><a class="link" href="login.php">Olvidé mi contraseña</a></p>
+        </div>
+                <br>
+                <p>¿No tienes una cuenta en BandUp? <a class="link" href="registro.php">Regístrate ahora</a>.</p>
+            </form>
+        </div>
+
+        <div class="img-registro">
+            <img src="side-registro-<?php echo rand(1, 12); ?>.png" alt="Registro" width="700px" />
+        </div>
+    </body>
+</html>

@@ -1,0 +1,262 @@
+<?php
+// Include config file
+require_once "config.php";
+ 
+// Define variables and initialize with empty values
+$username = $password = $confirm_password = $email = $nombre = $apellido = "";
+$username_err = $password_err = $email_err = $confirm_password_err = $nombre_err = $apellido_err = "";
+ 
+// Processing form data when form is submitted
+if($_SERVER["REQUEST_METHOD"] == "POST"){
+ 
+    // Validate username
+    if(empty(trim($_POST["username"]))){
+        $username_err = "Por favor ingrese un usuario.";
+    } else{
+        // Prepare a select statement
+        $sql = "SELECT id FROM cliente WHERE usuario = ?";
+        
+        if($stmt = mysqli_prepare($link, $sql)){
+            // Bind variables to the prepared statement as parameters
+            mysqli_stmt_bind_param($stmt, "s", $param_username);
+            
+            // Set parameters
+            $param_username = trim($_POST["username"]);
+            
+            // Attempt to execute the prepared statement
+            if(mysqli_stmt_execute($stmt)){
+                /* store result */
+                mysqli_stmt_store_result($stmt);
+                
+                if(mysqli_stmt_num_rows($stmt) == 1){
+                    $username_err = "Este usuario ya fue tomado.";
+                } else{
+                    $username = trim($_POST["username"]);
+                }
+            } else{
+                echo "Al parecer algo salió mal.";
+            }
+        }
+
+        $sql = "SELECT id FROM cliente WHERE email = ?";
+        
+        if($stmt = mysqli_prepare($link, $sql)){
+            // Bind variables to the prepared statement as parameters
+            mysqli_stmt_bind_param($stmt, "s", $param_username);
+            
+            // Set parameters
+            $param_email = trim($_POST["email"]);
+            
+            // Attempt to execute the prepared statement
+            if(mysqli_stmt_execute($stmt)){
+                /* store result */
+                mysqli_stmt_store_result($stmt);
+                
+                if(mysqli_stmt_num_rows($stmt) == 1){
+                    $email_err = "Este email ya fue tomado.";
+                } else{
+                    $email = trim($_POST["email"]);
+                }
+            } else{
+                echo "Al parecer algo salió mal.";
+            }
+        }
+         
+        // Close statement
+        mysqli_stmt_close($stmt);
+    }
+    
+    // Validate password
+    if(empty(trim($_POST["password"]))){
+        $password_err = "Por favor ingresa una contraseña.";     
+    } elseif(strlen(trim($_POST["password"])) < 6){
+        $password_err = "La contraseña al menos debe tener 6 caracteres.";
+    } else{
+        $password = trim($_POST["password"]);
+    }
+    
+    // Validate confirm password
+    if(empty(trim($_POST["confirm_password"]))){
+        $confirm_password_err = "Confirma tu contraseña.";     
+    } else{
+        $confirm_password = trim($_POST["confirm_password"]);
+        if(empty($password_err) && ($password != $confirm_password)){
+            $confirm_password_err = "No coincide la contraseña.";
+        }
+    }
+
+        // Validate password
+        if(empty(trim($_POST["nombre"]))){
+            $nombre_err = "Por favor ingresa un nombre.";     
+        } elseif(strlen(trim($_POST["password"])) > 18){
+            $nombre_err = "Lmayor as 18.";
+        } else{
+            $nombre = trim($_POST["nombre"]);
+        }
+
+        // Validate password
+        if(empty(trim($_POST["apellido"]))){
+            $apellido_err = "Por favor ingresa un apellido.";     
+        } elseif(strlen(trim($_POST["apellido"])) > 18){
+            $apellido_err = "Lmayor as apellido.";
+        } else{
+            $apellido = trim($_POST["apellido"]);
+        }
+    
+    // Check input errors before inserting in database
+    if(empty($username_err) && empty($password_err) && empty($confirm_password_err)){
+        
+        // Prepare an insert statement
+        $sql = "INSERT INTO cliente (usuario, contrasena, nombre, apellido, email, creado, modificado) VALUES (?, ?, ?, ?, ?, ?, ?)";
+         
+        if($stmt = mysqli_prepare($link, $sql)){
+            // Bind variables to the prepared statement as parameters
+            mysqli_stmt_bind_param($stmt, "sssssss", $param_username, $param_password, $param_nombre, $param_apellido, $param_email, $param_creado, $param_modificado);
+            
+            // Set parameters
+            $param_username = $username;
+            $param_password = password_hash($password, PASSWORD_DEFAULT); // Creates a password hash
+            $param_email = $email;
+            $param_nombre = $nombre;
+            $param_apellido = $apellido;
+            $param_creado = date("Y-m-d H:i:s");
+            $param_modificado = date("Y-m-d H:i:s");
+            
+            // Attempt to execute the prepared statement
+            if(mysqli_stmt_execute($stmt)){
+                // Redirect to login page
+                header("location: login.php");
+            } else{
+                echo "Algo salió mal, por favor inténtalo de nuevo.";
+            }
+        }
+         
+        // Close statement
+        mysqli_stmt_close($stmt);
+    }
+    
+    // Close connection
+    mysqli_close($link);
+}
+?>
+<!DOCTYPE html>
+<html lang='es'>
+    <head>
+        <style>
+            ::-webkit-scrollbar {
+                display: none;
+            }
+
+            html, body { 
+                height: 100%;
+                overflow: hidden
+            }
+        </style>
+
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial scale=1.0">
+        <title>Cuenta Nueva | BandUp</title>
+
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+        <link
+            href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&family=Montserrat:wght@700&display=swap"
+            rel="stylesheet">
+        <link href="css/normalize.css" rel="stylesheet">
+        <link href="css/styles.css" as="style" rel="preload">
+        <link href="css/styles.css" rel="stylesheet">
+        <script src="https://kit.fontawesome.com/c80fbc750b.js" crossorigin="anonymous"></script>
+    </head>
+
+    <body>
+        <div id="logoAlt" class="logo-alt">
+            <a href="https://bandup.monkeydevs.mx">
+                <img src="/bandup/img/BandUp.svg" width="100">
+            </a>
+            <nav class="nav-alt">
+                <ul class="menu-alt" style="padding-left: 20px;">
+                    <li><a href="https://bandup.monkeydevs.mx/">INICIO</a></li>
+                    <li><a href="/quienessomos.html">QUIÉNES SOMOS</a></li>
+                    <li><a href="#">CATÁLOGO</a></li>
+                    <li><a href="/contacto.html">CONTACTO</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="contenedor-registro">
+        <a class="titulos-body alt">Cuenta Nueva</a>
+            <form class="formulario" id="form1" name="signup-form" method="post" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+                <div class="varios">
+                <svg class="iconReg" style="width:24px;height:24px" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M14 20H4V17C4 14.3 9.3 13 12 13C13.5 13 15.9 13.4 17.7 14.3C16.9 14.6 16.3 15 15.7 15.5C14.6 15.1 13.3 14.9 12 14.9C9 14.9 5.9 16.4 5.9 17V18.1H14.2C14.1 18.5 14 19 14 19.5V20M23 19.5C23 21.4 21.4 23 19.5 23S16 21.4 16 19.5 17.6 16 19.5 16 23 17.6 23 19.5M12 6C13.1 6 14 6.9 14 8S13.1 10 12 10 10 9.1 10 8 10.9 6 12 6M12 4C9.8 4 8 5.8 8 8S9.8 12 12 12 16 10.2 16 8 14.2 4 12 4Z" />
+</svg>
+                    <input name="nombre" value="<?php echo $nombre; ?>" type="text" placeholder="Nombre">
+                    <input name="apellido" value="<?php echo $apellido; ?>" type="text" placeholder="Apellido"/>
+                </div>
+                <div class="input-contenedorReg">
+                <svg class="iconReg" style="width:24px;height:24px" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M11,4A4,4 0 0,1 15,8A4,4 0 0,1 11,12A4,4 0 0,1 7,8A4,4 0 0,1 11,4M11,6A2,2 0 0,0 9,8A2,2 0 0,0 11,10A2,2 0 0,0 13,8A2,2 0 0,0 11,6M11,13C12.1,13 13.66,13.23 15.11,13.69C14.5,14.07 14,14.6 13.61,15.23C12.79,15.03 11.89,14.9 11,14.9C8.03,14.9 4.9,16.36 4.9,17V18.1H13.04C13.13,18.8 13.38,19.44 13.76,20H3V17C3,14.34 8.33,13 11,13M18.5,10H20L22,10V12H20V17.5A2.5,2.5 0 0,1 17.5,20A2.5,2.5 0 0,1 15,17.5A2.5,2.5 0 0,1 17.5,15C17.86,15 18.19,15.07 18.5,15.21V10Z" />
+</svg>
+                    <input name="username" value="<?php echo $username; ?>" type="text" placeholder="Nombre de usuario" pattern="[A-Za-z0-9]{6,15}" title=""/>
+                </div>
+                <div class="input-contenedorReg">
+                <svg class="iconReg" style="width:22px; height:22px" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6M20 6L12 11L4 6H20M20 18H4V8L12 13L20 8V18Z" />
+                </svg>
+                    <input name="email" value="<?php echo $email; ?>" type="email" placeholder="Correo electronico"/>
+                </div>
+                <div class="varios">
+                <div class="form-group <?php echo (!empty($password_err)) ? 'has-error' : ''; ?>">
+                <svg class="iconReg" style="width:22px; height:22px" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M12,17C10.89,17 10,16.1 10,15C10,13.89 10.89,13 12,13A2,2 0 0,1 14,15A2,2 0 0,1 12,17M18,20V10H6V20H18M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V10C4,8.89 4.89,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z" />
+</svg>
+                    <input name="password" type="password" placeholder="Contraseña" value="<?php echo $password; ?>" minlength="8" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,20}$" title="At least 1 Uppercase
+At least 1 Lowercase
+At least 1 Number
+At least 1 Symbol, symbol allowed --> !@#$%^&*_=+-
+Min 8 chars and Max 12 chars"/>
+                    <input name="confirm_password" value="<?php echo $confirm_password; ?>" type="password" placeholder="Confirmar contraseña"/>
+                    <span class="help-block"><?php echo $password_err; ?></span>
+                </div>
+        </div>
+                <br>
+                <div class="center">
+                    <input type="checkbox" class="padding" value="1" name="terminos" checked /><label for="terminos">He leído y acepto los <a class="link" href="login.php">términos de uso</a> y la <a class="link" href="login.php">política de privacidad</a>.</label>
+        </div>
+                    <div class="center">
+                    <button type="submit" class="registro" name="enviar">Crear una cuenta</button>
+                </div>
+                <br>
+                <p>¿Ya tienes una cuenta en BandUp? <a class="link" href="login.php">Inicia sesión</a>.</p>
+            </form>
+        </div>
+
+        <div class="img-registro">
+            <img src="side-registro-<?php echo rand(1, 12); ?>.png" alt="Registro" width="700px" />
+        </div>
+    </body>
+    <script lenguage="javascript">    
+        var nav = document.getElementById('logoAlt');
+     
+        load();
+    
+        function load () {
+            const darkmode = localStorage.getItem('dark');
+    
+            if(!darkmode){
+                store('false');
+            } else if(darkmode == 'true'){
+                document.body.classList.toggle('dark');
+                
+                nav.classList.toggle('dark');
+                
+            }
+        }
+    
+        function store(value) {
+            localStorage.setItem('dark', value);    
+        }
+    </script>
+</html>

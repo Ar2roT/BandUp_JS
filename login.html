@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceder</title>
+    <!-- GOOGLE FONTs -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&family=Montserrat:wght@700&display=swap"
+        rel="stylesheet">
+    <!-- FONT AWESOME -->
+    <script src="https://kit.fontawesome.com/c80fbc750b.js" crossorigin="anonymous"></script>
+    <!-- ANIMATE CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+    <!--Custom CSS-->
+    <link rel="stylesheet" href="css/cuenta.css">
+  	<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  	<nav class="nav">
+        <ul class="menu">
+            <li><a href="https://bandup.monkeydevs.mx">INICIO</a></li>
+            <li><a href="quienessomos.html">QUIÉNES SOMOS</a></li>
+            <li><a href="#">CATÁLOGO</a></li>
+            <li><a href="contacto.html">CONTACTO</a></li>
+            
+        </ul>
+    </nav>
+    <nav class="nav-reg">
+        <ul class="menu">
+            <li><a href="registro.html">MI CUENTA</a></li>
+            <li><a href="wishlist.html">WISHLIST</a></li>
+        </ul>
+    </nav>
+    <div class="logo">
+        <a href="https://bandup.monkeydevs.mx">
+            <img src="/img/BandUp.svg" width="160">
+        </a>
+    </div>
+
+    <form method="post" action="" name="signup-form">
+        <div class="form-element">
+            <label>Username</label>
+            <input type="text" name="username" pattern="[a-zA-Z0-9]+" required />
+        </div>
+        <div class="form-element">
+            <label>Email</label>
+            <input type="email" name="email" required />
+        </div>
+        <div class="form-element">
+            <label>Password</label>
+            <input type="password" name="password" required />
+        </div>
+        <button type="submit" name="register" value="register">Register</button>
+    </form>
+
+        <p>Al registrarte, aceptas nuestras condiciones y politicas
+            de privacidad.
+        </p>
+        <p>¿No tienes una cuenta? <a class="link" href="registro.html">Registrate</a></p>
+    </div>
+</body>
+</html>
